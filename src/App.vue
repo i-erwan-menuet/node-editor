@@ -1,20 +1,39 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+    <ContextualMenu/>
+    <AppNode v-for="(node, index) in Nodes" v-bind:key="index" v-bind:node="node" v-bind:index="index"/>
   </div>
 </template>
 
 <script lang="ts">
+import store from "@/store";
+
+//MODULES
 import { Component, Vue } from "vue-property-decorator";
-import HelloWorld from "./components/HelloWorld.vue";
+
+/*COMPONENTS*/
+import AppNode from "./components/AppNode.vue";
+import ContextualMenu from "./components/ContextualMenu.vue";
+
+/*MODELS*/
+import Node from "./types/Node";
 
 @Component({
   components: {
-    HelloWorld
+    AppNode,
+    ContextualMenu
   }
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  mounted(){
+    this.$store.commit('fakeNodeInitialization');
+  }
+
+  get Nodes(): Array<Node>{
+    let nodes = this.$store.state.nodes;
+    return nodes;
+  }
+}
 </script>
 
 <style>
@@ -22,8 +41,13 @@ export default class App extends Vue {}
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+
+  width:100vw;
+  height:100vh;
+}
+
+body{
+  margin:0;
+  padding:0;
 }
 </style>
