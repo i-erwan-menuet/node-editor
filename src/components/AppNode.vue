@@ -1,5 +1,7 @@
 <template>
-    <VueDraggableResizable :key="index" :w="node.width" :h="node.height"
+    <VueDraggableResizable :key="index" :x="50" :y="50"
+						   :w="node.width" :h="50" class-name-active="node-active"
+						   drag-handle=".node-title" :resizable="false"
                            @dragging="onNodeDrag()" @resizing="onNodeResize()">
       <div v-bind:id="id" class="node">
         <div class="node-container">
@@ -62,17 +64,12 @@ export default class AppNode extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  .node{
-		width:200px;
-		position: absolute;
-		top:50px;
-		left:250px;
-		border-radius: 5px;
+  	.node{
+		min-width: 200px;
 		border:1px solid #ddd;
+		box-shadow: 0px 0px 2px 1px #eee;
 	}
-	.node:hover{
-		box-shadow: 0px 0px 8px 3px #eee;
-	}
+
 	.node-container{
 		width: 100%;
 		height: 100%;
@@ -84,7 +81,7 @@ export default class AppNode extends Vue {
 		flex: 0 0 30px;
 		line-height: 30px;
 		text-align: center;
-		background-color: #99ccff;
+		background-color: #0080ff;
 	}
 	.node-title:hover{
 		cursor:pointer;
@@ -130,5 +127,9 @@ export default class AppNode extends Vue {
 	}
 	.node-link-point:hover{
 		cursor:pointer;
+	}
+
+	.node-active .node{
+		border:1px solid #666;
 	}
 </style>
