@@ -29,9 +29,10 @@ export default new Vuex.Store({
       state.nodes.push(fakeNode);
       state.nodes.push(fakeNode2);
     },
-    moveNodePositionAtIndex(state, payload){
+    moveNodeToPosition(state, payload){
       let node = state.nodes[payload.index];
-      node.moveToPosition(new ScreenPosition(payload.x, payload.y));
+      node.moveToPosition(payload.newPosition as ScreenPosition);
+      state.nodes[payload.index] = node;
     }
   },
 

@@ -1,12 +1,12 @@
 <template>
-  <div id="app">
+  <div id="app" @contextmenu.prevent="displayContextualMenu($event)">
     <ContextualMenu ref="contextualMenu"/>
     <ToolMenu ref="toolMenu"/>
 
-    <div id="viewport" @mousedown="startPanning($event)" @mouseup="stopPanning()" @mousemove="pan($event)"
-                       @contextmenu.prevent="displayContextualMenu($event)">
+    <div id="viewport" @mousedown="startPanning($event)" @mouseup="handleMouseUp()" @mousemove="handleMouseMove($event)">
       <div id="view" ref="view">
-        <AppNode v-for="(node, index) in nodes" v-bind:key="index" v-bind:node="node" v-bind:index="index"/>
+        <AppNode v-for="(node, index) in nodes" :key="index" :node="node" :index="index"
+                 @drag-node="startGrabbingNode($event)"/>
       </div>
     </div>
   </div>
@@ -25,6 +25,7 @@ import ToolMenu from "./components/ToolMenu.vue";
 
 /*MODELS*/
 import Node from "./types/Node";
+import ScreenPosition from './types/ScreenPosition';
 
 @Component({
   components: {
@@ -40,34 +41,32 @@ export default class App extends Vue {
     view: HTMLElement
   }
 
-  private zoom: number = 1;
-  private zoomMin: number = 0.3;
-  private zoomMax: number = 1.3;
-  private zoomDelta: number = 0.05;
+  grabbingNodeIndex: number = -1;
 
   private isPanning: Boolean = false;
   private lastMouseX!: number;
   private lastMouseY!: number;
 
+  private deltaMouseX!: number;
+  private deltaMouseY!: number;
+
+  //Initiate the application by fetching data from store
   mounted(){
     this.$store.commit('fakeNodeInitialization');
   }
 
+  //Handle pad effect
   startPanning(event:MouseEvent):void{
     this.isPanning = true;
 
     this.lastMouseX = event.clientX;
     this.lastMouseY = event.clientY;
   }
-
-  stopPanning(): void{
+  stopPanning():void{
     this.isPanning = false;
   }
-
   pan(event: MouseEvent):void{
     if(this.isPanning){
-      debugger;
-
       var deltaX = this.lastMouseX - event.clientX;
       var deltaY = this.lastMouseY - event.clientY;
 
@@ -88,23 +87,46 @@ export default class App extends Vue {
     }
   }
 
-  resetZoom():void{
-    this.zoom = 1;
+  //Handle node grab effect
+  startGrabbingNode(event: any): void{
+    this.grabbingNodeIndex = event.index;
+
+    this.deltaMouseX = event.deltaPosition.x as number;
+    this.deltaMouseY = event.deltaPosition.y as number;
+  }
+  ///TO DO:
+  ///Find a way to commit only when user has stopped grabbing the current node to improve perf
+  ///and minimize store commitments as well
+  moveGrabbedNode(event: MouseEvent): void{
+    if(this.grabbingNodeIndex != -1){
+      let x = event.x - this.deltaMouseX;
+      let y = event.y - this.deltaMouseY;
+
+      this.$store.commit("moveNodeToPosition", {
+        index: this.grabbingNodeIndex,
+        newPosition: new ScreenPosition(x, y)
+      })
+    }
+  }
+  stopGrabbing(): void{
+    this.grabbingNodeIndex = -1;
+  }  
+
+  //Handle global mouse events
+  handleMouseUp(): void{
+    this.stopPanning();
+    this.stopGrabbing();
+  }
+  handleMouseMove(event: MouseEvent):void{
+    this.moveGrabbedNode(event);
+    this.pan(event);
   }
 
-  updateZoom(event: MouseWheelEvent): void{
-    let sign = event.deltaY > 0 ? 1 : -1;
-    this.zoom = this.zoom + (this.zoomDelta * sign);
-    if(this.zoom > this.zoomMax){
-      this.zoom = this.zoomMax;
-    }
-    else if(this.zoom < this.zoomMin){
-      this.zoom = this.zoomMin;
-    }
-  }
-
+  //Display contextual menu
   displayContextualMenu(event: MouseEvent): void{
     this.$refs.contextualMenu.show(event);
+    this.stopGrabbing();
+    this.stopPanning();
   }
 
   get nodes(): Array<Node>{

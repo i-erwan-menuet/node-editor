@@ -15,7 +15,7 @@
 			</div>
 
 			<!--Node actions - actions the user can do on this node (add data for example)-->
-			<div class="node-actions">
+			<div v-if="inEdition" class="node-actions">
 			
 			</div>
 
@@ -28,7 +28,7 @@
 <script lang="ts">
 import store from "@/store"
 
-import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import { Component, Prop, Watch, Vue, Emit } from "vue-property-decorator";
 import ScreenPosition from "@/types/ScreenPosition";
 
 import Node from "@/types/Node"
@@ -39,39 +39,23 @@ import Node from "@/types/Node"
 export default class AppNode extends Vue {
   @Prop() private index!: Number;
   @Prop() private node!: Node;
-  @Prop() private dragged!: Boolean;
-
-  isDragged: Boolean = false;
-  isActive: Boolean = false;
-
-  x: number = 0;
-  y: number = 0;
-  deltaX!: number;
-  deltaY!: number;
+;
+  inEdition: Boolean = false;
 
   mounted(){
-	  if(this.node != null){
-		this.x = this.node.position.x as number;
-		this.y = this.node.position.y as number;
-	  }
+	  
   }
 
   //METHODS
   dragNode(event: MouseEvent): void{
-	  this.isDragged = true;
-	  this.deltaX = event.x - this.x;
-	  this.deltaY = event.y - this.y;
-  }
+	  let deltaX = event.x - (this.node.position.x as number);
+	  let deltaY = event.y - (this.node.position.y as number);
 
-  moveNode(event: MouseEvent): void{
-	  if(this.isDragged){
-		  this.x = event.x - this.deltaX;
-		  this.y = event.y - this.deltaY;
-	  }
-  }
-
-  releaseNode(): void{
-	  this.isDragged = false;
+	  this.$emit("drag-node", {
+		  index: this.index,
+		  deltaPosition: new ScreenPosition(deltaX, deltaY)
+	  });
+	  this.inEdition = false;
   }
 
   //COMPUTED
@@ -84,8 +68,8 @@ export default class AppNode extends Vue {
 
   get style(): Object{
 	  return {
-		top: this.y + "px",
-		left: this.x + "px",
+		top: this.node.position.y + "px",
+		left: this.node.position.x + "px",
 	  }
   }
 }
@@ -100,6 +84,8 @@ export default class AppNode extends Vue {
 		min-width: 200px;
 		border:1px solid #ddd;
 		box-shadow: 0px 0px 2px 1px #eee;
+		background-color: white;
+		border-radius: 3px;
 	}
 
 	.node-container{
@@ -114,6 +100,8 @@ export default class AppNode extends Vue {
 		line-height: 30px;
 		text-align: center;
 		background-color: #0080ff;
+		border-top-left-radius: 3px;
+		border-top-right-radius: 3px;
 	}
 	.node-title:hover{
 		cursor:pointer;
@@ -149,7 +137,7 @@ export default class AppNode extends Vue {
 		position:absolute;
 		width:100%;
 		height:35px;
-		top:-30px;
+		top:100%;
 		left:0px;
 		background-color: #eee;
 		display:none;
@@ -172,9 +160,5 @@ export default class AppNode extends Vue {
 	}
 	.node-link-point:hover{
 		cursor:pointer;
-	}
-
-	.node-active .node{
-		border:1px solid #666;
 	}
 </style>

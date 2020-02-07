@@ -23,7 +23,8 @@ export default class ToolMenu extends Vue {
         width:500px;
         height:50px;
         border-radius: 3px;
-        background-color:#6fc9ff;
+        border:1px solid #6fc9ff;
+        background-color: #9edaff77;
     }
 
     #tool_menu:hover{
