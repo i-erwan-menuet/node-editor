@@ -12,7 +12,6 @@
 <script lang="ts">
 import { Component, Prop, Watch, Emit, Vue } from "vue-property-decorator";
 import "../utils/directives";
-import "@fortawesome/fontawesome-free";
 
 @Component({
 })

@@ -1,55 +1,74 @@
 <template>
-    <VueDraggableResizable :key="index" :x="50" :y="50"
-						   :w="node.width" :h="50" class-name-active="node-active"
-						   drag-handle=".node-title" :resizable="false"
-                           @dragging="onNodeDrag()" @resizing="onNodeResize()">
-      <div v-bind:id="id" class="node">
-        <div class="node-container">
-          <!--Node title - summary of the node-->
-          <div class="node-title">{{node.title}}</div>
+	<div v-bind:id="id" v-bind:style="style" class="node">
+		<div class="node-container">
+			<!--Node title - summary of the node-->
+			<div class="node-title" @mousedown="dragNode($event)" @mousemove="moveNode($event)" @mouseup="releaseNode()">
+				{{node.title}}
+			</div>
 
-          <!--Node data - every line represents a typed information or data of any kind-->
-          <div class="node-content">
-            <div class="node-data-line" v-for="(data, index) in node.data" v-bind:key="index">
-              <div class="node-data-title">{{ data.title }}</div>
-              <div class="node-data-type"></div>
-            </div>
-          </div>
+			<!--Node data - every line represents a typed information or data of any kind-->
+			<div class="node-content">
+			<div class="node-data-line" v-for="(data, index) in node.data" v-bind:key="index">
+				<div class="node-data-title">{{ data.title }}</div>
+				<div class="node-data-type"></div>
+			</div>
+			</div>
 
-          <!--Node actions - actions the user can do on this node (add data for example)-->
-          <div class="node-actions">
-            
-          </div>
+			<!--Node actions - actions the user can do on this node (add data for example)-->
+			<div class="node-actions">
+			
+			</div>
 
-          <!--Node link point - anchor of link(s) with other nodes-->
-          <div class="node-link-point"></div>
-        </div>
-      </div>
-    </VueDraggableResizable>
+			<!--Node link point - anchor of link(s) with other nodes-->
+			<div class="node-link-point"></div>
+		</div>
+	</div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
-import VueDraggableResizable from "vue-draggable-resizable";
+import ScreenPosition from "../types/ScreenPosition";
 
 import Node from "../types/Node"
 
 @Component({
-  components: {
-    VueDraggableResizable
-  }
+  components: { }
 })
 export default class AppNode extends Vue {
   @Prop() private index!: Number;
   @Prop() private node!: Node;
 
-  //METHODS
-  onNodeDrag(){
+  isDragged: Boolean = false;
+  isActive: Boolean = false;
 
+  x: number = 0;
+  y: number = 0;
+  deltaX!: number;
+  deltaY!: number;
+
+  mounted(){
+	  if(this.node != null){
+		this.x = this.node.position.x as number;
+		this.y = this.node.position.y as number;
+	  }
   }
 
-  onNodeResize(){
+  //METHODS
+  dragNode(event: MouseEvent): void{
+	  this.isDragged = true;
+	  this.deltaX = event.x - this.x;
+	  this.deltaY = event.y - this.y;
+  }
 
+  moveNode(event: MouseEvent): void{
+	  if(this.isDragged){
+		  this.x = event.x - this.deltaX;
+		  this.y = event.y - this.deltaY;
+	  }
+  }
+
+  releaseNode(): void{
+	  this.isDragged = false;
   }
 
   //COMPUTED
@@ -59,12 +78,22 @@ export default class AppNode extends Vue {
     }
     return "node_" + this.index;
   }
+
+  get style(): Object{
+	  return {
+		top: this.y + "px",
+		left: this.x + "px",
+	  }
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
   	.node{
+		position:absolute;
+		width:fit-content;
+		height:fit-content;
 		min-width: 200px;
 		border:1px solid #ddd;
 		box-shadow: 0px 0px 2px 1px #eee;
@@ -111,9 +140,22 @@ export default class AppNode extends Vue {
 		flex: 1 1 30%;
 		padding:0 5px;
 	}
+
 	.node-actions{
-		flex:0 0 30px;
+		flex:0 0 0px;
+		position:absolute;
+		width:100%;
+		height:35px;
+		top:-30px;
+		left:0px;
+		background-color: #eee;
+		display:none;
 	}
+
+	.node:hover .node-actions{
+		display:flex;
+	}
+
 	.node-link-point{
 		position: absolute;
 		bottom: 0px;
