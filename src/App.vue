@@ -1,9 +1,13 @@
 <template>
-  <div id="app" @click.middle="resetZoom()" @mousewheel="updateZoom($event)" @contextmenu.prevent="displayContextualMenu($event)">
+  <div id="app">
     <ContextualMenu ref="contextualMenu"/>
     <ToolMenu ref="toolMenu"/>
-    <div id="node_container">
-      <AppNode v-for="(node, index) in nodes" v-bind:key="index" v-bind:node="node" v-bind:index="index"/>
+
+    <div id="viewport" @mousedown="startPanning($event)" @mouseup="stopPanning()" @mousemove="pan($event)"
+                       @contextmenu.prevent="displayContextualMenu($event)">
+      <div id="view" ref="view">
+        <AppNode v-for="(node, index) in nodes" v-bind:key="index" v-bind:node="node" v-bind:index="index"/>
+      </div>
     </div>
   </div>
 </template>
@@ -32,7 +36,8 @@ import Node from "./types/Node";
 export default class App extends Vue {  
   $refs!:{
     contextualMenu: ContextualMenu,
-    toolMenu: ToolMenu
+    toolMenu: ToolMenu,
+    view: HTMLElement
   }
 
   private zoom: number = 1;
@@ -40,11 +45,47 @@ export default class App extends Vue {
   private zoomMax: number = 1.3;
   private zoomDelta: number = 0.05;
 
-  private containerDOM!: HTMLElement;
+  private isPanning: Boolean = false;
+  private lastMouseX!: number;
+  private lastMouseY!: number;
 
   mounted(){
     this.$store.commit('fakeNodeInitialization');
-    this.containerDOM = document.getElementById("node_container") as HTMLElement;
+  }
+
+  startPanning(event:MouseEvent):void{
+    this.isPanning = true;
+
+    this.lastMouseX = event.clientX;
+    this.lastMouseY = event.clientY;
+  }
+
+  stopPanning(): void{
+    this.isPanning = false;
+  }
+
+  pan(event: MouseEvent):void{
+    if(this.isPanning){
+      debugger;
+
+      var deltaX = this.lastMouseX - event.clientX;
+      var deltaY = this.lastMouseY - event.clientY;
+
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+
+      let left = parseFloat(this.$refs.view.style.left as string);
+      let top = parseFloat(this.$refs.view.style.top as string);
+
+      left = isNaN(left) ? 0 : left;
+      top = isNaN(top) ? 0 : top;
+
+      left -= deltaX;
+      top -= deltaY;
+
+      this.$refs.view.style.left = left.toString() + "px";
+      this.$refs.view.style.top = top.toString() + "px";
+    }
   }
 
   resetZoom():void{
@@ -73,29 +114,43 @@ export default class App extends Vue {
 
   @Watch('zoom')
   onZoomChanged(){
-    this.containerDOM.style.zoom = this.zoom.toString();
+    //this.containerDOM.style.zoom = this.zoom.toString();
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  width:100vw;
-  height:100vh;
+body {
+  background-color: white;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin:0;
+  padding:0;
 }
 
-#node_container{
+#app{
+  width: 100vw;
+  height: 100vh;
+}
+
+#viewport{
   width:100%;
   height:100%;
   overflow: hidden;
+  display: block;
+  background-color: transparent;
 }
 
-body{
-  margin:0;
-  padding:0;
+#view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  top:0px;
+  left:0px;
+}
+
+#view:active{
+  cursor:grab;
 }
 </style>

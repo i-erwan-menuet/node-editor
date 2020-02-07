@@ -2,7 +2,7 @@
 	<div v-bind:id="id" v-bind:style="style" class="node">
 		<div class="node-container">
 			<!--Node title - summary of the node-->
-			<div class="node-title" @mousedown="dragNode($event)" @mousemove="moveNode($event)" @mouseup="releaseNode()">
+			<div class="node-title" @mousedown.stop="dragNode($event)">
 				{{node.title}}
 			</div>
 
@@ -26,10 +26,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch, Vue } from "vue-property-decorator";
-import ScreenPosition from "../types/ScreenPosition";
+import store from "@/store"
 
-import Node from "../types/Node"
+import { Component, Prop, Watch, Vue } from "vue-property-decorator";
+import ScreenPosition from "@/types/ScreenPosition";
+
+import Node from "@/types/Node"
 
 @Component({
   components: { }
@@ -37,6 +39,7 @@ import Node from "../types/Node"
 export default class AppNode extends Vue {
   @Prop() private index!: Number;
   @Prop() private node!: Node;
+  @Prop() private dragged!: Boolean;
 
   isDragged: Boolean = false;
   isActive: Boolean = false;
