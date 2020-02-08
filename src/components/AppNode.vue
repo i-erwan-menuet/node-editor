@@ -1,5 +1,5 @@
 <template>
-	<div v-bind:id="id" v-bind:style="style" class="node" v-on:click.stop.prevent>
+	<div v-bind:id="id" v-bind:style="style" class="node" :class="{ 'shadow': shadow }" v-on:click.stop.prevent>
 		<div class="node-container">
 			<!--Node title - summary of the node-->
 			<div class="node-title" @mousedown.stop="dragNode($event)">
@@ -39,6 +39,7 @@ import Node from "@/types/Node"
 export default class AppNode extends Vue {
   @Prop() private index!: number;
   @Prop() private node!: Node;
+  @Prop() private shadow!: Boolean;
 ;
   inEdition: Boolean = false;
 
@@ -62,15 +63,24 @@ export default class AppNode extends Vue {
   get id(): String{
     if(this.index == null){
       return "";
-    }
-    return "node_" + this.index;
+	}
+	let id = "node_" + this.index;
+    if(this.shadow){
+		id += "_shadow";
+	}
+	return id;
   }
 
   get style(): Object{
+	  let z = this.index + 1;
+	  if(this.shadow){
+		  z += 1000;
+	  }
+
 	  return {
 		top: this.node.position.y + "px",
 		left: this.node.position.x + "px",
-		zIndex: this.index + 1
+		zIndex: z
 	  }
   }
 }
@@ -87,6 +97,10 @@ export default class AppNode extends Vue {
 		box-shadow: 0px 0px 2px 1px #eee;
 		background-color: white;
 		border-radius: 3px;
+	}
+
+	.node.shadow{
+		opacity: 0.5;
 	}
 
 	.node-container{
@@ -106,8 +120,9 @@ export default class AppNode extends Vue {
 		user-select: none;
 	}
 	.node-title:hover{
-		cursor:pointer;
+		cursor:grab;
 	}
+	
 	.node-content{
 		flex:1 1 auto;
 		display: flex;

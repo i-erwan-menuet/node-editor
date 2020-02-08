@@ -4,8 +4,6 @@ import ScreenPosition from "./ScreenPosition";
 export default class Node {
     title: String;
     position: ScreenPosition;
-    width: Number = NODE_WIDTH;
-    height: Number = NODE_HEIGHT;
     data: Array<Data> = [];
 
     constructor(title: string, position: ScreenPosition){
@@ -25,6 +23,3 @@ export default class Node {
         this.position = newPosition;
     }
 }
-
-const NODE_WIDTH = 200;
-const NODE_HEIGHT = 60;

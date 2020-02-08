@@ -8,6 +8,7 @@
       <div id="view" ref="view">
         <AppNode v-for="(node, index) in nodes" :key="index" :node="node" :index="index"
                  @drag-node="startGrabbingNode($event)"/>
+        <AppNode v-if="grabbingNodeIndex != -1" :node="grabbedNodeShadow" :index="grabbingNodeIndex" :shadow="true"/>
       </div>
     </div>
   </div>
@@ -43,6 +44,7 @@ export default class App extends Vue {
   }
 
   grabbingNodeIndex: number = -1;
+  grabbedNodeShadow: Node = new Node("Shadow node", new ScreenPosition(0,0));
 
   private isPanning: Boolean = false;
   private lastMouseX!: number;
@@ -97,12 +99,10 @@ export default class App extends Vue {
   startGrabbingNode(event: any): void{
     this.grabbingNodeIndex = event.index;
 
-    let node = this.nodes[this.grabbingNodeIndex];
+    this.grabbedNodeShadow = JSON.parse(JSON.stringify(this.nodes[this.grabbingNodeIndex]));
 
-    this.deltaMouseX = (event.mousePosition.x / this.zoom) - (node.position.x as number);
-    this.deltaMouseY = (event.mousePosition.y / this.zoom) - (node.position.y as number);
-
-    console.log({x: this.deltaMouseX, y: this.deltaMouseY})
+    this.deltaMouseX = (event.mousePosition.x / this.zoom) - (this.grabbedNodeShadow.position.x as number);
+    this.deltaMouseY = (event.mousePosition.y / this.zoom) - (this.grabbedNodeShadow.position.y as number);
   }
   ///TO DO:
   ///Find a way to commit only when user has stopped grabbing the current node to improve perf
@@ -112,13 +112,16 @@ export default class App extends Vue {
       let x = (event.x / this.zoom) - this.deltaMouseX;
       let y = (event.y / this.zoom) - this.deltaMouseY;
 
-      this.$store.commit("moveNodeToPosition", {
-        index: this.grabbingNodeIndex,
-        newPosition: new ScreenPosition(x, y)
-      })
+      this.grabbedNodeShadow.position.x = x;
+      this.grabbedNodeShadow.position.y = y;      
     }
   }
   stopGrabbing(): void{
+    this.$store.commit("moveNodeToPosition", {
+      index: this.grabbingNodeIndex,
+      newPosition: this.grabbedNodeShadow.position
+    })
+
     this.grabbingNodeIndex = -1;
   }  
 

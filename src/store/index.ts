@@ -21,7 +21,7 @@ export default new Vuex.Store({
       fakeNode.addData(fakeData);
       fakeNode.addData(fakeData2);
 
-      let fakeNode2 = new Node("Test Node 2", new ScreenPosition(800, 450));
+      let fakeNode2 = new Node("Test Node 2", new ScreenPosition(1200, 350));
       let fakeData3 = new Data("Test Data 3", DataType.Information, DataContentType.Text);
       
       fakeNode2.addData(fakeData3);
