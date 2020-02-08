@@ -3,7 +3,8 @@
     <ContextualMenu ref="contextualMenu"/>
     <ToolMenu ref="toolMenu"/>
 
-    <div id="viewport" @mousedown="startPanning($event)" @mouseup="handleMouseUp()" @mousemove="handleMouseMove($event)">
+    <div id="viewport" @mousedown.left="startPanning($event)" @mouseup="handleMouseUp()" @mousemove="handleMouseMove($event)"
+                       @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
       <div id="view" ref="view">
         <AppNode v-for="(node, index) in nodes" :key="index" :node="node" :index="index"
                  @drag-node="startGrabbingNode($event)"/>
@@ -50,9 +51,14 @@ export default class App extends Vue {
   private deltaMouseX!: number;
   private deltaMouseY!: number;
 
+  private zoom: number = 1;
+  private zoomFactor: number = 0.1;
+  private zoomMax: number = 1.5;
+  private zoomMin: number = 0.3;
+
   //Initiate the application by fetching data from store
   mounted(){
-    this.$store.commit('fakeNodeInitialization');
+    this.$store.commit('fakeInit');
   }
 
   //Handle pad effect
@@ -79,8 +85,8 @@ export default class App extends Vue {
       left = isNaN(left) ? 0 : left;
       top = isNaN(top) ? 0 : top;
 
-      left -= deltaX;
-      top -= deltaY;
+      left -= deltaX / this.zoom;
+      top -= deltaY / this.zoom;
 
       this.$refs.view.style.left = left.toString() + "px";
       this.$refs.view.style.top = top.toString() + "px";
@@ -91,16 +97,20 @@ export default class App extends Vue {
   startGrabbingNode(event: any): void{
     this.grabbingNodeIndex = event.index;
 
-    this.deltaMouseX = event.deltaPosition.x as number;
-    this.deltaMouseY = event.deltaPosition.y as number;
+    let node = this.nodes[this.grabbingNodeIndex];
+
+    this.deltaMouseX = (event.mousePosition.x / this.zoom) - (node.position.x as number);
+    this.deltaMouseY = (event.mousePosition.y / this.zoom) - (node.position.y as number);
+
+    console.log({x: this.deltaMouseX, y: this.deltaMouseY})
   }
   ///TO DO:
   ///Find a way to commit only when user has stopped grabbing the current node to improve perf
   ///and minimize store commitments as well
   moveGrabbedNode(event: MouseEvent): void{
     if(this.grabbingNodeIndex != -1){
-      let x = event.x - this.deltaMouseX;
-      let y = event.y - this.deltaMouseY;
+      let x = (event.x / this.zoom) - this.deltaMouseX;
+      let y = (event.y / this.zoom) - this.deltaMouseY;
 
       this.$store.commit("moveNodeToPosition", {
         index: this.grabbingNodeIndex,
@@ -122,6 +132,31 @@ export default class App extends Vue {
     this.pan(event);
   }
 
+  //Handle zoom
+  zoomOnMousePosition(event: MouseWheelEvent): void{
+    let sign = event.deltaY > 0 ? -1 : 1;
+    this.zoom += sign * this.zoomFactor;
+
+    if(this.zoom > this.zoomMax){
+      this.zoom = this.zoomMax;
+    }
+    else if(this.zoom < this.zoomMin){
+      this.zoom = this.zoomMin;
+    }
+
+    // // Calculate displacement of zooming position.
+    // let dx = (event.clientX - image.getLeft()) * (factor - 1);
+    // let dy = (event.clientY - image.getTop()) * (factor - 1);
+    // // Compensate for displacement.
+    // image.setLeft(image.getLeft() - dx);
+    // image.setTop(image.getTop() - dy);
+    
+    // canvas.renderAll();
+  }
+  resetZoom(event: MouseEvent):void{
+    this.zoom = 1;
+  }
+
   //Display contextual menu
   displayContextualMenu(event: MouseEvent): void{
     this.$refs.contextualMenu.show(event);
@@ -129,6 +164,8 @@ export default class App extends Vue {
     this.stopPanning();
   }
 
+
+  //COMPUTED GETTERS
   get nodes(): Array<Node>{
     let nodes = this.$store.state.nodes;
     return nodes;
@@ -136,7 +173,7 @@ export default class App extends Vue {
 
   @Watch('zoom')
   onZoomChanged(){
-    //this.containerDOM.style.zoom = this.zoom.toString();
+    this.$refs.view.style.zoom = this.zoom.toString();
   }
 }
 </script>
@@ -170,9 +207,6 @@ body {
   height: 100%;
   top:0px;
   left:0px;
-}
-
-#view:active{
-  cursor:grab;
+  z-index: 0;
 }
 </style>

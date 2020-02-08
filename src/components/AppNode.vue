@@ -1,5 +1,5 @@
 <template>
-	<div v-bind:id="id" v-bind:style="style" class="node">
+	<div v-bind:id="id" v-bind:style="style" class="node" v-on:click.stop.prevent>
 		<div class="node-container">
 			<!--Node title - summary of the node-->
 			<div class="node-title" @mousedown.stop="dragNode($event)">
@@ -37,7 +37,7 @@ import Node from "@/types/Node"
   components: { }
 })
 export default class AppNode extends Vue {
-  @Prop() private index!: Number;
+  @Prop() private index!: number;
   @Prop() private node!: Node;
 ;
   inEdition: Boolean = false;
@@ -53,7 +53,7 @@ export default class AppNode extends Vue {
 
 	  this.$emit("drag-node", {
 		  index: this.index,
-		  deltaPosition: new ScreenPosition(deltaX, deltaY)
+		  mousePosition: new ScreenPosition(event.x, event.y)
 	  });
 	  this.inEdition = false;
   }
@@ -70,6 +70,7 @@ export default class AppNode extends Vue {
 	  return {
 		top: this.node.position.y + "px",
 		left: this.node.position.x + "px",
+		zIndex: this.index + 1
 	  }
   }
 }
@@ -102,6 +103,7 @@ export default class AppNode extends Vue {
 		background-color: #0080ff;
 		border-top-left-radius: 3px;
 		border-top-right-radius: 3px;
+		user-select: none;
 	}
 	.node-title:hover{
 		cursor:pointer;
@@ -119,6 +121,11 @@ export default class AppNode extends Vue {
 		display: flex;
 		flex-direction: row;
 	}
+
+	.node-data-line:last-child{
+		border-bottom: none;
+	}
+
 	.node-data-line:hover{
 		background-color: #f2f2f2;
 	}

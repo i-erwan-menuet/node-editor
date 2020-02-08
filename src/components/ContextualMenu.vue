@@ -1,6 +1,6 @@
 <template>
-  <div id="contextual_menu_overlay" v-if="display">
-    <div id="contextual_menu" v-bind:style="style" v-on:click="hide()">
+  <div id="contextual_menu_overlay" v-if="display" v-on:mousedown.self="hide()">
+    <div id="contextual_menu" v-bind:style="style">
       <div class="contextual_menu_action">
         <span class="glyphicon fas fa-plus"></span>
         <p>Add new node</p>
@@ -57,12 +57,12 @@ export default class ContextualMenu extends Vue {
       position:fixed;
       width: 100%;
       height: 100%;
-      z-index: 1000;
+      z-index: 1000001;
     }
 
     #contextual_menu{
       position: absolute;;
-      z-index: 1001;
+      z-index: 1000002;
       background-color: white;
       box-shadow: 1px 1px 2px 1px #ccc;
       border-radius: 3px;
