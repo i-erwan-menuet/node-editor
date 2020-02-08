@@ -1,25 +1,30 @@
 <template>
-  <div id="contextual_menu_overlay" v-if="display" v-on:mousedown.self="hide()">
-    <div id="contextual_menu" v-bind:style="style">
-      <div class="contextual_menu_action">
-        <span class="glyphicon fas fa-plus"></span>
-        <p>Add new node</p>
+  <transition name="fade">
+    <div id="contextual_menu_overlay" v-if="display" v-on:mousedown.self="hide()">
+      <div id="contextual_menu" v-bind:style="style">
+        <div class="contextual_menu_action" @click="addNode()">
+          <span>
+            <font-awesome-icon icon="plus"/>
+          </span>
+          <p>Add new node</p>
+        </div>
       </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch, Emit, Vue } from "vue-property-decorator";
 import "../utils/directives";
+import ScreenPosition from '../types/ScreenPosition';
 
 @Component({
 })
 export default class ContextualMenu extends Vue {
   display: Boolean = false;
 
-  width:number = 250;
-  height: number = 200;
+  width:number = 180;
+  height: number = 150;
   top: number = 50;
   left: number = 50;
 
@@ -39,6 +44,11 @@ export default class ContextualMenu extends Vue {
 
   hide():void{
     this.display = false;
+  }
+
+  addNode(): void{
+    this.$store.commit("addNode", new ScreenPosition(this.left, this.top));
+    this.hide();
   }
 
   get style(): Object{
@@ -85,10 +95,21 @@ export default class ContextualMenu extends Vue {
       background-color: #f4f4f4;
     }
 
+    .contextual_menu_action:active{
+      background-color: rgb(85, 87, 255);
+    }
+
+
+    .contextual_menu_action span{
+      flex: 0 0 30px;
+      line-height: 35px;
+      text-align: center;
+    }
+
     .contextual_menu_action p{
       margin: 0;
       padding-left: 5px;
+      flex:1 1 auto;
     }
-
 
 </style>

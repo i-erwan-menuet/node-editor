@@ -15,8 +15,14 @@
 			</div>
 
 			<!--Node actions - actions the user can do on this node (add data for example)-->
-			<div v-if="inEdition" class="node-actions">
-			
+			<div class="node-actions">
+				<span class="node-action c-blue" title="Edit"><font-awesome-icon icon="pen" color="white"/></span>
+				<span class="node-action c-yellow" title="Copy"><font-awesome-icon icon="copy" color="white"/></span>
+				<span v-if="!confirmDelete" class="node-action c-red" title="Delete" @click="confirmNodeDeletion()"><font-awesome-icon icon="trash" color="white"/></span>
+				<span v-else class="node-action-multi" title="Confirm delete">
+					<span class="node-action c-green" @click="deleteNode()"><font-awesome-icon icon="check" color="white"/></span>
+					<span class="node-action c-red" @click="cancelNodeDeletion()"><font-awesome-icon icon="times" color="white"/></span>
+				</span>
 			</div>
 
 			<!--Node link point - anchor of link(s) with other nodes-->
@@ -43,6 +49,10 @@ export default class AppNode extends Vue {
 ;
   inEdition: Boolean = false;
 
+  //TODO: think about unique node id
+  //the data are shared between components when I delete one and another one gets the same index
+  confirmDelete: Boolean = false;
+
   mounted(){
 	  
   }
@@ -59,28 +69,31 @@ export default class AppNode extends Vue {
 	  this.inEdition = false;
   }
 
+  confirmNodeDeletion(){
+	  this.confirmDelete = true;
+  }
+  cancelNodeDeletion(){
+	  this.confirmDelete = false;
+  }
+
+  deleteNode(){
+	  this.$store.commit("deleteNode", this.index);
+	  this.confirmDelete = false;
+  }
+
   //COMPUTED
   get id(): String{
     if(this.index == null){
       return "";
 	}
-	let id = "node_" + this.index;
-    if(this.shadow){
-		id += "_shadow";
-	}
-	return id;
+	return "node_" + this.index;
   }
 
   get style(): Object{
-	  let z = this.index + 1;
-	  if(this.shadow){
-		  z += 1000;
-	  }
-
 	  return {
 		top: this.node.position.y + "px",
 		left: this.node.position.x + "px",
-		zIndex: z
+		zIndex: this.index + 1
 	  }
   }
 }
@@ -92,15 +105,20 @@ export default class AppNode extends Vue {
 		position:absolute;
 		width:fit-content;
 		height:fit-content;
-		min-width: 200px;
+		min-width: 300px;
 		border:1px solid #ddd;
 		box-shadow: 0px 0px 2px 1px #eee;
 		background-color: white;
 		border-radius: 3px;
 	}
 
+	.node.grabbed{
+		box-shadow: 0px 0px 4px 0px rgb(133, 133, 133);
+		cursor:grabbing;
+	}
+
 	.node.shadow{
-		opacity: 0.5;
+		opacity: 0.4;
 	}
 
 	.node-container{
@@ -111,8 +129,8 @@ export default class AppNode extends Vue {
 		position: relative;
 	}
 	.node-title {
-		flex: 0 0 30px;
-		line-height: 30px;
+		flex: 0 0 50px;
+		line-height: 50px;
 		text-align: center;
 		background-color: #0080ff;
 		border-top-left-radius: 3px;
@@ -130,8 +148,8 @@ export default class AppNode extends Vue {
 	}
 	.node-data-line{
 		width: 100%;
-		flex:0 0 30px;
-		line-height: 30px;
+		flex:0 0 40px;
+		line-height: 40px;
 		border-bottom: 1px solid #ccc;
 		display: flex;
 		flex-direction: row;
@@ -156,17 +174,62 @@ export default class AppNode extends Vue {
 
 	.node-actions{
 		flex:0 0 0px;
+		padding-left:10px;
 		position:absolute;
-		width:100%;
-		height:35px;
-		top:100%;
-		left:0px;
-		background-color: #eee;
+		width: fit-content;
+		min-width:50px;
+		height:fit-content;
+		top:0;
+		right:0;
+		transform:translateX(99%);
+		opacity: 1;
+		background-color: transparent;
 		display:none;
+		flex-direction: column;
+		align-items: flex-start;
+		text-align: left;
+
+		animation-name: slideFadeLeft;
+		animation-duration: 0.5s;
+	}
+
+	@keyframes slideFadeLeft {
+		from {
+			opacity: 0;
+			transform:translateX(50%);
+		}
+		to {
+			opacity: 1;
+			transform:translateX(99%);
+		}
 	}
 
 	.node:hover .node-actions{
 		display:flex;
+	}
+
+	.node.grabbed .node-actions{
+		display:none;
+	}
+
+	.node-action-multi{
+		display:flex;
+		flex-direction: row;
+		width:fit-content;		
+	}
+
+	.node-action{
+		flex: 0 0 30px;
+		width:30px;
+		border-radius: 50%;
+		text-align: center;
+		line-height: 30px;
+		margin-bottom: 5px;
+	}
+
+	.node-action:hover{
+		box-shadow: 0px 0px 3px 1px #ccc;
+		cursor:pointer;
 	}
 
 	.node-link-point{
@@ -182,5 +245,21 @@ export default class AppNode extends Vue {
 	}
 	.node-link-point:hover{
 		cursor:pointer;
+	}
+
+	.c-blue{
+		background-color: blue;
+	}
+
+	.c-red{
+		background-color: red;
+	}
+
+	.c-yellow{
+		background-color: yellow;
+	}
+
+	.c-green{
+		background-color: green;
 	}
 </style>

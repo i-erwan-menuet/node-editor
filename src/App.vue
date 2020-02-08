@@ -1,14 +1,14 @@
 <template>
-  <div id="app" @contextmenu.prevent="displayContextualMenu($event)">
+  <div id="app" @contextmenu.prevent="displayContextualMenu($event)" @mouseup="handleMouseUp()">
     <ContextualMenu ref="contextualMenu"/>
     <ToolMenu ref="toolMenu"/>
 
-    <div id="viewport" @mousedown.left="startPanning($event)" @mouseup="handleMouseUp()" @mousemove="handleMouseMove($event)"
+    <div id="viewport" @mousedown.left="startPanning($event)" @mousemove="handleMouseMove($event)"
                        @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
       <div id="view" ref="view">
         <AppNode v-for="(node, index) in nodes" :key="index" :node="node" :index="index"
-                 @drag-node="startGrabbingNode($event)"/>
-        <AppNode v-if="grabbingNodeIndex != -1" :node="grabbedNodeShadow" :index="grabbingNodeIndex" :shadow="true"/>
+                 @drag-node="startGrabbingNode($event)" :shadow="index === grabbingNodeIndex"/>
+        <AppNode v-if="grabbingNodeIndex != -1" :node="grabbedNodeShadow" :index="1000" class="grabbed"/>
       </div>
     </div>
   </div>
@@ -16,6 +16,8 @@
 
 <script lang="ts">
 import store from "@/store";
+
+
 
 //MODULES
 import { Component, Vue, Watch } from "vue-property-decorator";
@@ -65,10 +67,14 @@ export default class App extends Vue {
 
   //Handle pad effect
   startPanning(event:MouseEvent):void{
-    this.isPanning = true;
+    let domTarget = event.target as HTMLElement;
 
-    this.lastMouseX = event.clientX;
-    this.lastMouseY = event.clientY;
+    if(domTarget.id === "viewport" || domTarget.id === "view"){
+      this.isPanning = true;
+
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    }
   }
   stopPanning():void{
     this.isPanning = false;
@@ -104,9 +110,6 @@ export default class App extends Vue {
     this.deltaMouseX = (event.mousePosition.x / this.zoom) - (this.grabbedNodeShadow.position.x as number);
     this.deltaMouseY = (event.mousePosition.y / this.zoom) - (this.grabbedNodeShadow.position.y as number);
   }
-  ///TO DO:
-  ///Find a way to commit only when user has stopped grabbing the current node to improve perf
-  ///and minimize store commitments as well
   moveGrabbedNode(event: MouseEvent): void{
     if(this.grabbingNodeIndex != -1){
       let x = (event.x / this.zoom) - this.deltaMouseX;
@@ -117,11 +120,12 @@ export default class App extends Vue {
     }
   }
   stopGrabbing(): void{
-    this.$store.commit("moveNodeToPosition", {
-      index: this.grabbingNodeIndex,
-      newPosition: this.grabbedNodeShadow.position
-    })
-
+    if(this.grabbingNodeIndex != -1){
+      this.$store.commit("moveNodeToPosition", {
+        index: this.grabbingNodeIndex,
+        newPosition: this.grabbedNodeShadow.position
+      })
+    }
     this.grabbingNodeIndex = -1;
   }  
 
@@ -147,14 +151,21 @@ export default class App extends Vue {
       this.zoom = this.zoomMin;
     }
 
+    ///trying to center the zoom effect on mouse position
+    ///not very successful so far
+    // let left = parseFloat(this.$refs.view.style.left as string);
+    // let top = parseFloat(this.$refs.view.style.top as string);
+
+    // left = isNaN(left) ? 0 : left;
+    // top = isNaN(top) ? 0 : top;
+
     // // Calculate displacement of zooming position.
-    // let dx = (event.clientX - image.getLeft()) * (factor - 1);
-    // let dy = (event.clientY - image.getTop()) * (factor - 1);
+    // let dx = (event.clientX - left) / this.zoom;
+    // let dy = (event.clientY - top) / this.zoom;
+
     // // Compensate for displacement.
-    // image.setLeft(image.getLeft() - dx);
-    // image.setTop(image.getTop() - dy);
-    
-    // canvas.renderAll();
+    // this.$refs.view.style.left = (dx -event.clientX) + "px";
+    // this.$refs.view.style.top = (dy - event.clientY) + "px";
   }
   resetZoom(event: MouseEvent):void{
     this.zoom = 1;
@@ -166,7 +177,6 @@ export default class App extends Vue {
     this.stopGrabbing();
     this.stopPanning();
   }
-
 
   //COMPUTED GETTERS
   get nodes(): Array<Node>{
