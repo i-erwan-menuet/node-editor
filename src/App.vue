@@ -6,7 +6,7 @@
     <div id="viewport" @mousedown.left="startPanning($event)" @mousemove="handleMouseMove($event)"
                        @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
       <div id="view" ref="view">
-        <AppNode v-for="(node, index) in nodes" :key="index" :node="node" :index="index"
+        <AppNode v-for="(node, index) in nodes" :key="node.title + '_' + index" :node="node" :index="index"
                  @drag-node="startGrabbingNode($event)" :shadow="index === grabbingNodeIndex"/>
         <AppNode v-if="grabbingNodeIndex != -1" :node="grabbedNodeShadow" :index="1000" class="grabbed"/>
       </div>

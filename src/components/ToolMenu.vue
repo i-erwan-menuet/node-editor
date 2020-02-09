@@ -1,12 +1,17 @@
 <template>
     <div id="tool_menu">
+        <BaseIcon icon="bars" color="black" background="transparent" size="2" :fill="true"/>
     </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Watch, Emit, Vue } from "vue-property-decorator";
+import BaseIcon from "./BaseIcon.vue"
 
 @Component({
+    components:{
+        BaseIcon
+    }
 })
 export default class ToolMenu extends Vue {
 
@@ -17,19 +22,24 @@ export default class ToolMenu extends Vue {
     #tool_menu{
         position:fixed;
         z-index:1000000;
-        left:50%;
-        bottom:25px;
-        transform:translateX(-50%);
+        left:25px;
+        top:25px;
 
-        width:500px;
-        height:50px;
-        border-radius: 3px;
+        width:75px;
+        height:75px;
+        border-radius: 50%;
         border:1px solid #a9a9a9;
-        /* background-color: rgba(163, 163, 163, 0.445); */
+
+        text-align: center;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: white;
     }
 
     #tool_menu:hover{
         box-shadow: 0px 1px 3px 1px #ccc;
-        transition:all 0.3s ease-in-out 0s;
     }
 </style>

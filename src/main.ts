@@ -2,19 +2,24 @@ import Vue from "vue";
 import App from "./App.vue";
 import store from "./store";
 
+require("@/utils/style.css");
+
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faPlus, faFolderOpen, faSave, faPen, faTrash, faCopy, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faCog, faFolderOpen, faSave, faPen, faTrash, faCopy, faCheck, faTimes, faBars, faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon, FontAwesomeLayers, FontAwesomeLayersText } from '@fortawesome/vue-fontawesome'
 
 library.add(
   faPlus,
+  faPlusCircle,
   faFolderOpen,
   faCopy,
   faSave,
   faPen,
   faTrash,
   faCheck,
-  faTimes
+  faTimes,
+  faCog,
+  faBars
 )
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)

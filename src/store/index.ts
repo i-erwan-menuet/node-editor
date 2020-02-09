@@ -29,6 +29,7 @@ export default new Vuex.Store({
       state.nodes.push(fakeNode);
       state.nodes.push(fakeNode2);
     },
+
     addNode(state, payload){
       let newNode = new Node("New node", payload as ScreenPosition);
       state.nodes.push(newNode);
@@ -36,6 +37,17 @@ export default new Vuex.Store({
     deleteNode(state, payload){
       state.nodes.splice(payload, 1);
     },
+    copyNode(state, payload){
+      let existingNode = state.nodes[payload] as Node;
+      
+      let newScreenPostion = new ScreenPosition(existingNode.position.x as number + 50, existingNode.position.y as number + 50);
+
+      let nodeCopy = new Node(existingNode.title, newScreenPostion)
+      nodeCopy.addDatas(existingNode.data);      
+
+      state.nodes.push(nodeCopy);
+    },
+
     moveNodeToPosition(state, payload){
       let node = state.nodes[payload.index];
       node.moveToPosition(payload.newPosition as ScreenPosition);

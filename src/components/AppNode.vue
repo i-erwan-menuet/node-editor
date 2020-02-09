@@ -1,6 +1,8 @@
 <template>
-	<div v-bind:id="id" v-bind:style="style" class="node" :class="{ 'shadow': shadow }" v-on:click.stop.prevent>
-		<div class="node-container">
+	<div v-bind:id="id" 
+		 v-bind:style="style" 
+		 class="node" :class="{ 'shadow': shadow }"> 
+		<div class="node-container" @mouseenter="mouseIn()" @mouseleave="mouseOut()">
 			<!--Node title - summary of the node-->
 			<div class="node-title" @mousedown.stop="dragNode($event)">
 				{{node.title}}
@@ -8,31 +10,38 @@
 
 			<!--Node data - every line represents a typed information or data of any kind-->
 			<div class="node-content">
-			<div class="node-data-line" v-for="(data, index) in node.data" v-bind:key="index">
-				<div class="node-data-title">{{ data.title }}</div>
-				<div class="node-data-type"></div>
-			</div>
+				<div class="node-data-line" v-for="(data, index) in node.data" v-bind:key="index">
+					<div class="node-data-title">{{ data.title }}</div>
+					<div class="node-data-type"></div>
+				</div>
+
+				<div v-if="inEdition && mouseOver">
+					<BaseIcon id="add_row_icon" class="node-data-edition-icon" background="blue" icon="plus" color="white"/>
+					<BaseIcon id="add_column_icon" class="node-data-edition-icon" background="blue" icon="plus" color="white"/>
+				</div>
 			</div>
 
 			<!--Node actions - actions the user can do on this node (add data for example)-->
-			<div class="node-actions">
-				<span class="node-action c-blue" title="Edit"><font-awesome-icon icon="pen" color="white"/></span>
-				<span class="node-action c-yellow" title="Copy"><font-awesome-icon icon="copy" color="white"/></span>
-				<span v-if="!confirmDelete" class="node-action c-red" title="Delete" @click="confirmNodeDeletion()"><font-awesome-icon icon="trash" color="white"/></span>
-				<span v-else class="node-action-multi" title="Confirm delete">
-					<span class="node-action c-green" @click="deleteNode()"><font-awesome-icon icon="check" color="white"/></span>
-					<span class="node-action c-red" @click="cancelNodeDeletion()"><font-awesome-icon icon="times" color="white"/></span>
-				</span>
-			</div>
+			<div v-if="mouseOver" class="node-actions">
+				<BaseIcon @click="editNode()" :background="inEdition ? 'lightblue' : 'blue'" icon="cog" :color="inEdition ? 'blue' : 'white'"/>
+				<BaseIcon @click="copyNode()" background="yellow" icon="copy" color="white"/>
 
-			<!--Node link point - anchor of link(s) with other nodes-->
-			<div class="node-link-point"></div>
-		</div>
+				<BaseIcon v-if="!confirmDelete" @click="confirmNodeDeletion()" background="red" icon="trash" color="white"/>
+				<div v-else class="node-action-multi">
+					<BaseIcon @click="deleteNode()" background="green" icon="check" color="white" title="Confirm delete"/>
+					<BaseIcon @click="cancelNodeDeletion()" background="red" icon="times" color="white"/>
+				</div>
+			</div>
+		</div>					
+		<!--Node link point - anchor of link(s) with other nodes-->
+		<div v-if="!inEdition || (inEdition && !mouseOver)" class="node-link-point"></div>
 	</div>
 </template>
 
 <script lang="ts">
 import store from "@/store"
+
+import BaseIcon from "./BaseIcon.vue";
 
 import { Component, Prop, Watch, Vue, Emit } from "vue-property-decorator";
 import ScreenPosition from "@/types/ScreenPosition";
@@ -40,14 +49,17 @@ import ScreenPosition from "@/types/ScreenPosition";
 import Node from "@/types/Node"
 
 @Component({
-  components: { }
+  components: {
+	  BaseIcon
+  }
 })
 export default class AppNode extends Vue {
   @Prop() private index!: number;
   @Prop() private node!: Node;
   @Prop() private shadow!: Boolean;
-;
+
   inEdition: Boolean = false;
+  mouseOver: Boolean = false;
 
   //TODO: think about unique node id
   //the data are shared between components when I delete one and another one gets the same index
@@ -69,6 +81,10 @@ export default class AppNode extends Vue {
 	  this.inEdition = false;
   }
 
+  editNode(){
+	  this.inEdition = !this.inEdition;
+  }
+
   confirmNodeDeletion(){
 	  this.confirmDelete = true;
   }
@@ -79,6 +95,18 @@ export default class AppNode extends Vue {
   deleteNode(){
 	  this.$store.commit("deleteNode", this.index);
 	  this.confirmDelete = false;
+  }
+
+  copyNode(){
+	  this.$store.commit("copyNode", this.index);
+  }
+
+  mouseIn(): void{
+	  this.mouseOver = true;
+  }
+
+  mouseOut(): void{
+	  this.mouseOver = false;
   }
 
   //COMPUTED
@@ -140,6 +168,10 @@ export default class AppNode extends Vue {
 	.node-title:hover{
 		cursor:grab;
 	}
+
+	.node:hover .node-title{
+		background-color: #59acff;
+	}
 	
 	.node-content{
 		flex:1 1 auto;
@@ -177,31 +209,16 @@ export default class AppNode extends Vue {
 		padding-left:10px;
 		position:absolute;
 		width: fit-content;
-		min-width:50px;
 		height:fit-content;
 		top:0;
 		right:0;
-		transform:translateX(99%);
+		transform:translateY(-99%);
 		opacity: 1;
 		background-color: transparent;
 		display:none;
-		flex-direction: column;
-		align-items: flex-start;
+		flex-direction: row;
+		align-items: flex-end;
 		text-align: left;
-
-		animation-name: slideFadeLeft;
-		animation-duration: 0.5s;
-	}
-
-	@keyframes slideFadeLeft {
-		from {
-			opacity: 0;
-			transform:translateX(50%);
-		}
-		to {
-			opacity: 1;
-			transform:translateX(99%);
-		}
 	}
 
 	.node:hover .node-actions{
@@ -214,22 +231,14 @@ export default class AppNode extends Vue {
 
 	.node-action-multi{
 		display:flex;
-		flex-direction: row;
+		flex-direction: column;
 		width:fit-content;		
 	}
 
-	.node-action{
-		flex: 0 0 30px;
+	.node-actions .base-icon{
 		width:30px;
-		border-radius: 50%;
-		text-align: center;
+		height:30px;
 		line-height: 30px;
-		margin-bottom: 5px;
-	}
-
-	.node-action:hover{
-		box-shadow: 0px 0px 3px 1px #ccc;
-		cursor:pointer;
 	}
 
 	.node-link-point{
@@ -247,19 +256,24 @@ export default class AppNode extends Vue {
 		cursor:pointer;
 	}
 
-	.c-blue{
-		background-color: blue;
+	.node-data-edition-icon{
+		position: absolute;
+		border-radius: 50%;
+		margin:0;
+		width:20px;
+		height:20px;
 	}
 
-	.c-red{
-		background-color: red;
+	#add_row_icon{		
+		bottom: 0px;
+		left:50%;
+		transform: translate(-50%, 50%);
+
 	}
 
-	.c-yellow{
-		background-color: yellow;
-	}
-
-	.c-green{
-		background-color: green;
+	#add_column_icon{
+		top: 50%;
+		right:0;
+		transform: translate(50%, 0);
 	}
 </style>

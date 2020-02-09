@@ -1,0 +1,40 @@
+.slide-enter-active, .slide-leave-active{
+    transition: transform 0.2s;
+}
+
+.slide-enter, .slide-leave-to {
+    transform:translateX(-50%);
+}
+
+/*.slide-leave-active {
+    animation: slideFade 0.3s reverse;
+} 
+
+.fade-slide-leave-to {
+
+}
+
+.fade-slide-enter {
+    opacity: 0;
+    transform: translateX(-50%);
+}*/
+
+@keyframes slideFade {
+    0%{
+        opacity: 0;
+        transform: translateX(-50%);
+    }
+    100%{
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+.fade-enter-active, .fade-leave-active{
+    transition:opacity 0.5s;
+}
+
+.fade-enter, .fade-leave-to{
+    opacity: 0;
+}
