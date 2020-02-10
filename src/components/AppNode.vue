@@ -10,14 +10,17 @@
 
 			<!--Node data - every line represents a typed information or data of any kind-->
 			<div class="node-content">
-				<div class="node-data-line" v-for="(data, index) in node.data" v-bind:key="index">
-					<div class="node-data-title">{{ data.title }}</div>
-					<div class="node-data-type"></div>
+				<div class="node-data-line" v-for="(line, index) in node.lines" v-bind:key="'line_' + index">
+					<div class="node-data" v-for="(data, index) in line.data" v-bind:key="'data_' + index">
+						{{ data.value }}
+					</div>
 				</div>
 
 				<div v-if="inEdition">
-					<BaseIcon id="add_row_icon" class="node-data-edition-icon" background="blue" icon="plus" color="white"/>
-					<BaseIcon id="add_column_icon" class="node-data-edition-icon" background="blue" icon="plus" color="white"/>
+					<BaseIcon id="add_row_icon" class="node-data-edition-icon" @click="addLine()"
+							  background="blue" icon="plus" color="white"/>
+					<BaseIcon id="add_column_icon" class="node-data-edition-icon" v-if="node.lines.length > 0" @click="addColumn()"
+					 	 	  background="blue" icon="plus" color="white"/>
 				</div>
 			</div>
 
@@ -85,23 +88,19 @@ export default class AppNode extends Vue {
 	  });
 	  this.inEdition = false;
   }
-
   editNode(){
 	  this.inEdition = !this.inEdition;
   }
-
   confirmNodeDeletion(){
 	  this.confirmDelete = true;
   }
   cancelNodeDeletion(){
 	  this.confirmDelete = false;
   }
-
   deleteNode(){
 	  this.$store.commit("deleteNode", this.index);
 	  this.confirmDelete = false;
   }
-
   copyNode(){
 	  this.copyCount += 1;
 	  if(this.copyTimer){
@@ -115,6 +114,13 @@ export default class AppNode extends Vue {
 		  index: this.index,
 		  count: this.copyCount
 	  });
+  }
+
+  addLine(){
+	  this.$store.commit("addLineToNode", this.index);
+  }
+  addColumn(){
+	  this.$store.commit("addColumnToNode", this.index);
   }
 
   resetCopyCount(){
@@ -211,18 +217,18 @@ export default class AppNode extends Vue {
 	.node-data-line:last-child{
 		border-bottom: none;
 	}
-
 	.node-data-line:hover{
 		background-color: #f2f2f2;
 	}
-	.node-data-title{
-		flex: 1 1 70%;
+
+	.node-data{
+		flex: 1 1 auto;
+		width:fit-content;
 		border-right:1px solid #e6e6e6;
 		padding:0 5px;
 	}
-	.node-data-type{
-		flex: 1 1 30%;
-		padding:0 5px;
+	.node-data:last-child{
+		border-right: none;
 	}
 
 	.node-actions{

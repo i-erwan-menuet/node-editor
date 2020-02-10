@@ -2,8 +2,8 @@ import Vue from "vue";
 import Vuex from "vuex";
 import  Node from "../types/Node";
 import ScreenPosition from '@/types/ScreenPosition';
+import Line from '@/types/Line';
 import Data from '@/types/Data';
-import { DataType, DataContentType } from '@/constants/Enumerations';
 
 Vue.use(Vuex);
 
@@ -15,16 +15,13 @@ export default new Vuex.Store({
   mutations: {
     fakeInit(state){
       let fakeNode = new Node("Test Node 1", new ScreenPosition(150, 150));
-      let fakeData = new Data("Test Data 1", DataType.Information, DataContentType.Text);
-      let fakeData2 = new Data("Test Data 2", DataType.Information, DataContentType.Text);
+      fakeNode.addLine();
+      fakeNode.addColumn();
+      fakeNode.addColumn();
+      fakeNode.addLine();
 
-      fakeNode.addData(fakeData);
-      fakeNode.addData(fakeData2);
-
-      let fakeNode2 = new Node("Test Node 2", new ScreenPosition(1200, 350));
-      let fakeData3 = new Data("Test Data 3", DataType.Information, DataContentType.Text);
-      
-      fakeNode2.addData(fakeData3);
+      let fakeNode2 = new Node("Test Node 2", new ScreenPosition(1200, 350));      
+      fakeNode2.addLine();
 
       state.nodes.push(fakeNode);
       state.nodes.push(fakeNode2);
@@ -42,10 +39,33 @@ export default new Vuex.Store({
       
       let newScreenPostion = new ScreenPosition(existingNode.position.x + (50 * payload.count), existingNode.position.y + (50 * payload.count));
 
-      let nodeCopy = new Node(existingNode.title, newScreenPostion)
-      nodeCopy.addDatas(existingNode.data);      
+      let nodeCopy = new Node(existingNode.title + " - copy", newScreenPostion);
+
+      let copiedLines = new Array<Line>();
+      for (let i = 0; i < existingNode.lines.length; i++) {
+        let line = existingNode.lines[i];
+
+        let newLine = new Line(line.data.length);
+        let copiedData = new Array<Data>();
+
+        for (let j = 0; j < line.data.length; j++) {
+          copiedData.push(Object.assign({}, line.data[j]));
+        }
+
+        newLine.data = copiedData;
+        copiedLines.push(newLine);
+      }
+
+      nodeCopy.setLines(copiedLines);
 
       state.nodes.push(nodeCopy);
+    },
+
+    addLineToNode(state, payload){
+      state.nodes[payload].addLine();
+    },
+    addColumnToNode(state, payload){
+      state.nodes[payload].addColumn();
     },
 
     moveNodeToPosition(state, payload){

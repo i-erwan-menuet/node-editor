@@ -1,27 +1,29 @@
-import Data  from "./Data";
+import Line  from "./Line";
 import ScreenPosition from "./ScreenPosition";
 
 export default class Node {
     title: string;
     position: ScreenPosition;
-    data: Array<Data> = [];
-    headers: Array<string> = [];
+    lines: Array<Line> = [];
 
     constructor(title: string, position: ScreenPosition){
         this.title = title;
         this.position = position;
     }
 
-    addData(data: Data): void{
-        this.data.push(data);
+    addLine(): void{
+        let nb = this.lines.length > 0 ? this.lines[0].data.length : 1;
+        let line = new Line(nb);
+        this.lines.push(line);
+    }
+    setLines(lines: Array<Line>){
+        this.lines = lines;
     }
 
-    addDatas(data: Data[]): void{
-        this.data = this.data.concat(data);
-    }
-
-    addHeader(header: string):void{
-        this.headers.push(header);
+    addColumn():void{
+        this.lines.forEach(line => {
+            line.addData();
+        });
     }
 
     moveToPosition(newPosition: ScreenPosition){

@@ -1,14 +1,17 @@
-import { DataType,DataContentType } from '@/constants/Enumerations';
-
 export default class Data{
-    title: String;
-    type: DataType;
-    contentType: DataContentType;
-    contentValue: String = "";
+    value!: any;
+    type: DataType = DataType.String;
 
-    constructor(title:string, type: DataType, contentType: DataContentType) {
-        this.title = title;
-        this.type = type;
-        this.contentType = contentType;
+    constructor(value?: any, type?: DataType) {
+        this.value = value ? value : "";
+        this.type = type ? type : DataType.String;
     }
+}
+
+export enum DataType{
+    String = 0,
+    Boolean = 1,
+    Number = 2,
+    Currency = 3,
+    Percentage = 4
 }
