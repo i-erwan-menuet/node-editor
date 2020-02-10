@@ -9,11 +9,14 @@ import ScreenPosition from '../types/ScreenPosition';
 @Component({
 })
 export default class SelectionBox extends Vue {
-    @Prop() private start!: ScreenPosition;
     @Prop() private end!: ScreenPosition;
 
     private flipX: Boolean = false;
     private flipY: Boolean = false;
+
+    get start(): ScreenPosition{
+        return this.$store.state.selectionStartPos as ScreenPosition;
+    }
 
     get width(): number{
         let w = this.end.x - this.start.x;

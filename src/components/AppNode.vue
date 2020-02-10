@@ -1,7 +1,8 @@
 <template>
 	<div v-bind:id="id" 
 		 v-bind:style="style" 
-		 class="node" :class="{ 'shadow': shadow }"> 
+		 ref="el"
+		 class="node" :class="{ 'shadow': shadow, 'selected': isSelected }"> 
 		<div class="node-container" @mouseenter="mouseIn()" @mouseleave="mouseOut()">
 			<!--Node title - summary of the node-->
 			<div class="node-title" @mousedown.stop="dragNode($event)">
@@ -59,6 +60,10 @@ import Node from "@/types/Node"
   }
 })
 export default class AppNode extends Vue {
+  $refs!: {
+	el: HTMLElement
+  }
+
   @Prop() private index!: number;
   @Prop() private node!: Node;
   @Prop() private shadow!: Boolean;
@@ -151,6 +156,28 @@ export default class AppNode extends Vue {
 		zIndex: this.index + 1
 	  }
   }
+
+  get isSelected(): Boolean{
+	  if(this.$store.state.selectionActive === true)
+	  {
+		debugger;
+
+		let startP: ScreenPosition =  this.$store.state.selectionStartPos;
+		let endP: ScreenPosition = this.$store.state.selectionEndPos;
+
+		let flipX = endP.x - startP.x;
+		let flipY = endP.y - startP.y;
+
+		let inXRange: Boolean = flipX > 0 ? this.node.position.x >= startP.x && this.node.position.x + this.$el.clientWidth <= endP.x :
+											this.node.position.x >= endP.x && this.node.position.x + this.$el.clientWidth <= startP.x;
+											
+		let inYRange: Boolean = flipY > 0 ? this.node.position.y >= startP.y && this.node.position.y + this.$el.clientHeight <= endP.y :
+											this.node.position.y >= endP.y && this.node.position.y + this.$el.clientHeight <= startP.y;
+
+		return inYRange && inXRange;
+	  }
+	  return false;
+  }
 }
 </script>
 
@@ -174,6 +201,10 @@ export default class AppNode extends Vue {
 
 	.node.shadow{
 		opacity: 0.4;
+	}
+
+	.node.selected{
+		box-shadow: 0px 0px 4px 1px rgb(0, 135, 212);
 	}
 
 	.node-container{

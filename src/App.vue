@@ -1,7 +1,7 @@
 <template>
   <div id="app" @contextmenu.prevent="displayContextualMenu($event)" @mouseup="handleMouseUp()"
-                @mousemove="handleMouseMove($event)" @mousedown.shift.left="startSelection($event)">
-    <SelectionBox v-if="selectionActive" :start="startSelectionPos" :end="endSelectionPos"/>
+                @mousemove="handleMouseMove($event)" @mousedown.shift.left="startSelection($event)" @mousedown.exact="handleMouseDown()">
+    <SelectionBox v-if="displaySelectionBox" :end="endSelectionTemporaryPos"/>
     <ContextualMenu ref="contextualMenu" @add-node="addNode($event)"/>
     <ToolMenu ref="toolMenu"/>
 
@@ -51,9 +51,10 @@ export default class App extends Vue {
   grabbingNodeIndex: number = -1;
   grabbedNodeShadow: Node = new Node("Shadow node", new ScreenPosition(0,0));
 
+  displaySelectionBox: Boolean = false;
   selectionActive: Boolean = false;
-  startSelectionPos: ScreenPosition = new ScreenPosition(0, 0);
-  endSelectionPos: ScreenPosition = new ScreenPosition(0,0);
+
+  endSelectionTemporaryPos: ScreenPosition = new ScreenPosition(0,0);
 
   private isPanning: Boolean = false;
   private lastMouseX!: number;
@@ -143,11 +144,17 @@ export default class App extends Vue {
     this.stopSelection();
   }
   handleMouseMove(event: MouseEvent):void{
-    if(this.selectionActive){
+    if(this.displaySelectionBox){
       this.updateSelectionBox(event);
     } else{
       this.moveGrabbedNode(event);
       this.pan(event);
+    }
+  }
+  handleMouseDown(){
+    if(this.selectionActive){
+      this.selectionActive = false;
+      this.deactivateSelection();
     }
   }
 
@@ -185,17 +192,32 @@ export default class App extends Vue {
 
   startSelection(event: MouseEvent):void{
     this.selectionActive = true;
+    this.displaySelectionBox = true;
 
-    this.startSelectionPos = new ScreenPosition(event.clientX, event.clientY);
-    this.endSelectionPos = this.startSelectionPos;
+    let pos = new ScreenPosition(event.clientX, event.clientY);
+
+    this.$store.commit("setSelectionStartPosition", {
+      pos: pos,
+      active: this.selectionActive
+    });
+    this.endSelectionTemporaryPos = pos;
   }
   updateSelectionBox(event: MouseEvent):void{
-    if(this.selectionActive){
-      this.endSelectionPos = new ScreenPosition(event.clientX, event.clientY);
+    if(this.displaySelectionBox){
+      this.endSelectionTemporaryPos = new ScreenPosition(event.clientX, event.clientY);
     }
   }
   stopSelection():void{
-    this.selectionActive = false;
+    if(this.displaySelectionBox){
+      this.displaySelectionBox = false;
+      this.$store.commit("setSelectionEndPosition", this.endSelectionTemporaryPos);
+    }
+  }
+  deactivateSelection():void{
+    this.$store.commit("deactivateSelection",{
+      active: this.selectionActive,
+      pos: new ScreenPosition(0,0)
+    });
   }
 
   //Display contextual menu

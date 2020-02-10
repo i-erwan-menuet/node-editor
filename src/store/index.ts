@@ -9,7 +9,11 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    nodes: Array<Node>()
+    nodes: Array<Node>(),
+
+    selectionActive: Boolean,
+    selectionStartPos: ScreenPosition,
+    selectionEndPos: ScreenPosition
   },
 
   mutations: {
@@ -73,6 +77,19 @@ export default new Vuex.Store({
       node.moveToPosition(payload.newPosition as ScreenPosition);
       state.nodes[payload.index] = node;
     },
+
+    setSelectionStartPosition(state, payload){
+      state.selectionActive = payload.active;
+      state.selectionStartPos = payload.pos;
+    },
+    setSelectionEndPosition(state, payload){
+      state.selectionEndPos = payload;
+    },
+    deactivateSelection(state, payload){
+      state.selectionActive = payload.active;
+      state.selectionStartPos = payload.pos;
+      state.selectionEndPos = payload.pos;
+    }
   },
 
   actions: {
