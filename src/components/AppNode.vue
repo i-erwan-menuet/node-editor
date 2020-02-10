@@ -15,14 +15,14 @@
 					<div class="node-data-type"></div>
 				</div>
 
-				<div v-if="inEdition && mouseOver">
+				<div v-if="inEdition">
 					<BaseIcon id="add_row_icon" class="node-data-edition-icon" background="blue" icon="plus" color="white"/>
 					<BaseIcon id="add_column_icon" class="node-data-edition-icon" background="blue" icon="plus" color="white"/>
 				</div>
 			</div>
 
 			<!--Node actions - actions the user can do on this node (add data for example)-->
-			<div v-if="mouseOver" class="node-actions">
+			<div v-if="mouseOver || inEdition" class="node-actions">
 				<BaseIcon @click="editNode()" :background="inEdition ? 'lightblue' : 'blue'" icon="cog" :color="inEdition ? 'blue' : 'white'"/>
 				<BaseIcon @click="copyNode()" background="yellow" icon="copy" color="white"/>
 
@@ -34,7 +34,7 @@
 			</div>
 		</div>					
 		<!--Node link point - anchor of link(s) with other nodes-->
-		<div v-if="!inEdition || (inEdition && !mouseOver)" class="node-link-point"></div>
+		<div v-if="!inEdition" class="node-link-point"></div>
 	</div>
 </template>
 
@@ -64,6 +64,9 @@ export default class AppNode extends Vue {
   //TODO: think about unique node id
   //the data are shared between components when I delete one and another one gets the same index
   confirmDelete: Boolean = false;
+
+  private copyCount: number = 0;
+  private copyTimer: any = null;
 
   mounted(){
 	  
@@ -98,7 +101,22 @@ export default class AppNode extends Vue {
   }
 
   copyNode(){
-	  this.$store.commit("copyNode", this.index);
+	  this.copyCount += 1;
+	  if(this.copyTimer){
+		  clearTimeout(this.copyTimer);
+	  }
+	  this.copyTimer = setTimeout( () => {
+		  this.copyCount = 0;
+	  }, 1000);
+
+	  this.$store.commit("copyNode", {
+		  index: this.index,
+		  count: this.copyCount
+	  });
+  }
+
+  resetCopyCount(){
+	  this.copyCount = 0;
   }
 
   mouseIn(): void{
@@ -107,6 +125,7 @@ export default class AppNode extends Vue {
 
   mouseOut(): void{
 	  this.mouseOver = false;
+	  this.cancelNodeDeletion();
   }
 
   //COMPUTED

@@ -38,9 +38,9 @@ export default new Vuex.Store({
       state.nodes.splice(payload, 1);
     },
     copyNode(state, payload){
-      let existingNode = state.nodes[payload] as Node;
+      let existingNode = state.nodes[payload.index] as Node;
       
-      let newScreenPostion = new ScreenPosition(existingNode.position.x as number + 50, existingNode.position.y as number + 50);
+      let newScreenPostion = new ScreenPosition(existingNode.position.x + (50 * payload.count), existingNode.position.y + (50 * payload.count));
 
       let nodeCopy = new Node(existingNode.title, newScreenPostion)
       nodeCopy.addDatas(existingNode.data);      

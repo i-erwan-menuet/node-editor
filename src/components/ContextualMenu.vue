@@ -47,7 +47,7 @@ export default class ContextualMenu extends Vue {
   }
 
   addNode(): void{
-    this.$store.commit("addNode", new ScreenPosition(this.left, this.top));
+    this.$emit("add-node", new ScreenPosition(this.left, this.top));
     this.hide();
   }
 

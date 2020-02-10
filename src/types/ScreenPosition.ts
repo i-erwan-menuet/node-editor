@@ -1,9 +1,15 @@
 export default class ScreenPosition{
-    x: Number;
-    y: Number;
+    x: number;
+    y: number;
 
-    constructor(x: Number, y: Number) {
+    constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
+    }
+
+    divide(number: number): ScreenPosition{
+        this.x = this.x / number;
+        this.y = this.y / number;
+        return this;
     }
 }

@@ -1,6 +1,6 @@
 <template>
   <div id="app" @contextmenu.prevent="displayContextualMenu($event)" @mouseup="handleMouseUp()">
-    <ContextualMenu ref="contextualMenu"/>
+    <ContextualMenu ref="contextualMenu" @add-node="addNode($event)"/>
     <ToolMenu ref="toolMenu"/>
 
     <div id="viewport" @mousedown.left="startPanning($event)" @mousemove="handleMouseMove($event)"
@@ -176,6 +176,9 @@ export default class App extends Vue {
     this.$refs.contextualMenu.show(event);
     this.stopGrabbing();
     this.stopPanning();
+  }
+  addNode(payload: ScreenPosition): void{
+    this.$store.commit("addNode", payload.divide(this.zoom));
   }
 
   //COMPUTED GETTERS
