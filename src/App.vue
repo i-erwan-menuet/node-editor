@@ -1,10 +1,11 @@
 <template>
-  <div id="app" @contextmenu.prevent="displayContextualMenu($event)" @mouseup="handleMouseUp()">
+  <div id="app" @contextmenu.prevent="displayContextualMenu($event)" @mouseup="handleMouseUp()"
+                @mousemove="handleMouseMove($event)" @mousedown.shift.left="startSelection($event)">
+    <SelectionBox v-if="selectionActive" :start="startSelectionPos" :end="endSelectionPos"/>
     <ContextualMenu ref="contextualMenu" @add-node="addNode($event)"/>
     <ToolMenu ref="toolMenu"/>
 
-    <div id="viewport" @mousedown.left="startPanning($event)" @mousemove="handleMouseMove($event)"
-                       @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
+    <div id="viewport" @mousedown.left="startPanning($event)" @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
       <div id="view" ref="view">
         <AppNode v-for="(node, index) in nodes" :key="node.title + '_' + index" :node="node" :index="index"
                  @drag-node="startGrabbingNode($event)" :shadow="index === grabbingNodeIndex"/>
@@ -26,6 +27,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import AppNode from "./components/AppNode.vue";
 import ContextualMenu from "./components/ContextualMenu.vue";
 import ToolMenu from "./components/ToolMenu.vue";
+import SelectionBox from "./components/SelectionBox.vue";
 
 /*MODELS*/
 import Node from "./types/Node";
@@ -35,7 +37,8 @@ import ScreenPosition from './types/ScreenPosition';
   components: {
     AppNode,
     ContextualMenu,
-    ToolMenu
+    ToolMenu,
+    SelectionBox
   }
 })
 export default class App extends Vue {  
@@ -47,6 +50,10 @@ export default class App extends Vue {
 
   grabbingNodeIndex: number = -1;
   grabbedNodeShadow: Node = new Node("Shadow node", new ScreenPosition(0,0));
+
+  selectionActive: Boolean = false;
+  startSelectionPos: ScreenPosition = new ScreenPosition(0, 0);
+  endSelectionPos: ScreenPosition = new ScreenPosition(0,0);
 
   private isPanning: Boolean = false;
   private lastMouseX!: number;
@@ -133,10 +140,15 @@ export default class App extends Vue {
   handleMouseUp(): void{
     this.stopPanning();
     this.stopGrabbing();
+    this.stopSelection();
   }
   handleMouseMove(event: MouseEvent):void{
-    this.moveGrabbedNode(event);
-    this.pan(event);
+    if(this.selectionActive){
+      this.updateSelectionBox(event);
+    } else{
+      this.moveGrabbedNode(event);
+      this.pan(event);
+    }
   }
 
   //Handle zoom
@@ -169,6 +181,21 @@ export default class App extends Vue {
   }
   resetZoom(event: MouseEvent):void{
     this.zoom = 1;
+  }
+
+  startSelection(event: MouseEvent):void{
+    this.selectionActive = true;
+
+    this.startSelectionPos = new ScreenPosition(event.clientX, event.clientY);
+    this.endSelectionPos = this.startSelectionPos;
+  }
+  updateSelectionBox(event: MouseEvent):void{
+    if(this.selectionActive){
+      this.endSelectionPos = new ScreenPosition(event.clientX, event.clientY);
+    }
+  }
+  stopSelection():void{
+    this.selectionActive = false;
   }
 
   //Display contextual menu

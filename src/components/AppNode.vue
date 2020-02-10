@@ -22,16 +22,18 @@
 			</div>
 
 			<!--Node actions - actions the user can do on this node (add data for example)-->
-			<div v-if="mouseOver || inEdition" class="node-actions">
-				<BaseIcon @click="editNode()" :background="inEdition ? 'lightblue' : 'blue'" icon="cog" :color="inEdition ? 'blue' : 'white'"/>
-				<BaseIcon @click="copyNode()" background="yellow" icon="copy" color="white"/>
+			<transition name="fade">
+				<div v-if="mouseOver || inEdition" class="node-actions">
+					<BaseIcon @click="editNode()" :background="inEdition ? 'lightblue' : 'blue'" icon="cog" :color="inEdition ? 'blue' : 'white'"/>
+					<BaseIcon @click="copyNode()" background="yellow" icon="copy" color="white"/>
 
-				<BaseIcon v-if="!confirmDelete" @click="confirmNodeDeletion()" background="red" icon="trash" color="white"/>
-				<div v-else class="node-action-multi">
-					<BaseIcon @click="deleteNode()" background="green" icon="check" color="white" title="Confirm delete"/>
-					<BaseIcon @click="cancelNodeDeletion()" background="red" icon="times" color="white"/>
+					<BaseIcon v-if="!confirmDelete" @click="confirmNodeDeletion()" background="red" icon="trash" color="white"/>
+					<div v-else class="node-action-multi">
+						<BaseIcon @click="deleteNode()" background="green" icon="check" color="white" title="Confirm delete"/>
+						<BaseIcon @click="cancelNodeDeletion()" background="red" icon="times" color="white"/>
+					</div>
 				</div>
-			</div>
+			</transition>
 		</div>					
 		<!--Node link point - anchor of link(s) with other nodes-->
 		<div v-if="!inEdition" class="node-link-point"></div>
@@ -152,7 +154,7 @@ export default class AppNode extends Vue {
 		position:absolute;
 		width:fit-content;
 		height:fit-content;
-		min-width: 300px;
+		min-width: 250px;
 		border:1px solid #ddd;
 		box-shadow: 0px 0px 2px 1px #eee;
 		background-color: white;
@@ -176,8 +178,8 @@ export default class AppNode extends Vue {
 		position: relative;
 	}
 	.node-title {
-		flex: 0 0 50px;
-		line-height: 50px;
+		flex: 0 0 40px;
+		line-height: 40px;
 		text-align: center;
 		background-color: #0080ff;
 		border-top-left-radius: 3px;
@@ -188,9 +190,9 @@ export default class AppNode extends Vue {
 		cursor:grab;
 	}
 
-	.node:hover .node-title{
+	/* .node:hover .node-title{
 		background-color: #59acff;
-	}
+	} */
 	
 	.node-content{
 		flex:1 1 auto;
@@ -199,8 +201,8 @@ export default class AppNode extends Vue {
 	}
 	.node-data-line{
 		width: 100%;
-		flex:0 0 40px;
-		line-height: 40px;
+		flex:0 0 35px;
+		line-height: 35px;
 		border-bottom: 1px solid #ccc;
 		display: flex;
 		flex-direction: row;
@@ -232,16 +234,11 @@ export default class AppNode extends Vue {
 		top:0;
 		right:0;
 		transform:translateY(-99%);
-		opacity: 1;
 		background-color: transparent;
-		display:none;
+		display:flex;
 		flex-direction: row;
 		align-items: flex-end;
 		text-align: left;
-	}
-
-	.node:hover .node-actions{
-		display:flex;
 	}
 
 	.node.grabbed .node-actions{

@@ -52,7 +52,7 @@ export default new Vuex.Store({
       let node = state.nodes[payload.index];
       node.moveToPosition(payload.newPosition as ScreenPosition);
       state.nodes[payload.index] = node;
-    }
+    },
   },
 
   actions: {
