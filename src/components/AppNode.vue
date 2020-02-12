@@ -1,18 +1,17 @@
 <template>
-	<div v-bind:id="id" 
-		 v-bind:style="style" 
-		 ref="el"
-		 class="node" :class="{ 'shadow': shadow, 'selected': isSelected }"> 
+	<div v-bind:id="id" v-bind:style="style" 
+		 ref="el" class="node" :class="{ 'shadow': shadow, 'selected': isSelected }"
+		 v-outside-click="disableEdition"> 
 		<div class="node-container" @mouseenter="mouseIn()" @mouseleave="mouseOut()">
 			<!--Node title - summary of the node-->
 			<div class="node-title" @mousedown.stop="dragNode($event)">
-				{{node.title}}
+				<input :disabled="!inEdition" type="text" :value="node.title" placeholder="Title..." @keydown.enter="updateNodeTitle($event)"/>
 			</div>
 
 			<!--Node data - every line represents a typed information or data of any kind-->
 			<div class="node-content">
-				<div class="node-data-line" v-for="(line, index) in node.lines" v-bind:key="'line_' + index">
-					<div class="node-data" v-for="(data, index) in line.data" v-bind:key="'data_' + index">
+				<div class="node-data-line" v-for="(line, index) in node.lines" :key="'line_' + index">
+					<div class="node-data" v-for="(data, index) in line.data" :key="'data_' + index">
 						{{ data.value }}
 					</div>
 				</div>
@@ -84,6 +83,10 @@ export default class AppNode extends Vue {
 
   //METHODS
   dragNode(event: MouseEvent): void{
+	  if(this.inEdition){
+		  return;
+	  }
+
 	  let deltaX = event.x - (this.node.position.x as number);
 	  let deltaY = event.y - (this.node.position.y as number);
 
@@ -141,6 +144,18 @@ export default class AppNode extends Vue {
 	  this.cancelNodeDeletion();
   }
 
+  updateNodeTitle(event: Event):void{
+	  let target = event.target as HTMLInputElement;
+	  this.$store.commit("updateNodeTitle", {
+		  index: this.index,
+		  value: target.value
+	  });
+  }
+
+  disableEdition():void{
+	this.inEdition = false;
+  }
+
   //COMPUTED
   get id(): String{
     if(this.index == null){
@@ -160,19 +175,31 @@ export default class AppNode extends Vue {
   get isSelected(): Boolean{
 	  if(this.$store.state.selectionActive === true)
 	  {
-		debugger;
-
 		let startP: ScreenPosition =  this.$store.state.selectionStartPos;
 		let endP: ScreenPosition = this.$store.state.selectionEndPos;
+
+		if(startP == null || endP == null){
+			return false;
+		}
+
+		let zoomStartP = new ScreenPosition(startP.x, startP.y).divide(this.$store.state.zoom);
+		let zoomEndP = new ScreenPosition(endP.x, endP.y).divide(this.$store.state.zoom);
+
+		let parentView = this.$refs.el.parentElement as HTMLElement;
+		let offsetL = parentView.offsetLeft;
+		let offsetT = parentView.offsetTop;
 
 		let flipX = endP.x - startP.x;
 		let flipY = endP.y - startP.y;
 
-		let inXRange: Boolean = flipX > 0 ? this.node.position.x >= startP.x && this.node.position.x + this.$el.clientWidth <= endP.x :
-											this.node.position.x >= endP.x && this.node.position.x + this.$el.clientWidth <= startP.x;
+		let offsetNodeX = this.node.position.x + offsetL;
+		let offsetNodeY = this.node.position.y + offsetT;
+
+		let inXRange: Boolean = flipX > 0 ? offsetNodeX >= zoomStartP.x && offsetNodeX + this.$el.clientWidth <= zoomEndP.x :
+											offsetNodeX >= zoomEndP.x && offsetNodeX + this.$el.clientWidth <= zoomStartP.x;
 											
-		let inYRange: Boolean = flipY > 0 ? this.node.position.y >= startP.y && this.node.position.y + this.$el.clientHeight <= endP.y :
-											this.node.position.y >= endP.y && this.node.position.y + this.$el.clientHeight <= startP.y;
+		let inYRange: Boolean = flipY > 0 ? offsetNodeY >= zoomStartP.y && offsetNodeY + this.$el.clientHeight <= zoomEndP.y :
+											offsetNodeY >= zoomEndP.y && offsetNodeY + this.$el.clientHeight <= zoomStartP.y;
 
 		return inYRange && inXRange;
 	  }
@@ -225,6 +252,22 @@ export default class AppNode extends Vue {
 	}
 	.node-title:hover{
 		cursor:grab;
+	}
+
+	.node-title input{
+		background-color: #52a9ff;
+		border:1px solid #016edb;
+		border-radius: 3px;
+		height:30px;
+		line-height:30px;
+		text-align: center;
+	}
+
+	.node-title input:disabled{
+		background-color: inherit;
+		cursor:grab;
+		border:none;
+		color:black;
 	}
 
 	/* .node:hover .node-title{

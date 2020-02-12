@@ -1,11 +1,11 @@
 <template>
   <div id="app" @contextmenu.prevent="displayContextualMenu($event)" @mouseup="handleMouseUp()"
                 @mousemove="handleMouseMove($event)" @mousedown.shift.left="startSelection($event)" @mousedown.exact="handleMouseDown()">
-    <SelectionBox v-if="displaySelectionBox" :end="endSelectionTemporaryPos"/>
+    <!-- <SelectionBox v-if="displaySelectionBox" :end="endSelectionTemporaryPos"/> -->
     <ContextualMenu ref="contextualMenu" @add-node="addNode($event)"/>
     <ToolMenu ref="toolMenu"/>
 
-    <div id="viewport" @mousedown.left="startPanning($event)" @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
+    <div id="viewport" ref="viewport" @mousedown.left="startPanning($event)" @mousewheel.prevent="zoomOnMousePosition($event)" @click.middle="resetZoom($event)">
       <div id="view" ref="view">
         <AppNode v-for="(node, index) in nodes" :key="node.title + '_' + index" :node="node" :index="index"
                  @drag-node="startGrabbingNode($event)" :shadow="index === grabbingNodeIndex"/>
@@ -45,7 +45,8 @@ export default class App extends Vue {
   $refs!:{
     contextualMenu: ContextualMenu,
     toolMenu: ToolMenu,
-    view: HTMLElement
+    view: HTMLElement,
+    viewport: HTMLElement
   }
 
   grabbingNodeIndex: number = -1;
@@ -63,13 +64,13 @@ export default class App extends Vue {
   private deltaMouseX!: number;
   private deltaMouseY!: number;
 
-  private zoom: number = 1;
-  private zoomFactor: number = 0.1;
+  private zoomFactor: number = 0.08;
   private zoomMax: number = 1.5;
-  private zoomMin: number = 0.3;
+  private zoomMin: number = 0.5;
 
   //Initiate the application by fetching data from store
   mounted(){
+    this.$store.commit("setZoom", 1);
     this.$store.commit('fakeInit');
   }
 
@@ -115,8 +116,8 @@ export default class App extends Vue {
 
     this.grabbedNodeShadow = JSON.parse(JSON.stringify(this.nodes[this.grabbingNodeIndex]));
 
-    this.deltaMouseX = (event.mousePosition.x / this.zoom) - (this.grabbedNodeShadow.position.x as number);
-    this.deltaMouseY = (event.mousePosition.y / this.zoom) - (this.grabbedNodeShadow.position.y as number);
+    this.deltaMouseX = (event.mousePosition.x / this.zoom) - this.grabbedNodeShadow.position.x;
+    this.deltaMouseY = (event.mousePosition.y / this.zoom) - this.grabbedNodeShadow.position.y;
   }
   moveGrabbedNode(event: MouseEvent): void{
     if(this.grabbingNodeIndex != -1){
@@ -161,14 +162,16 @@ export default class App extends Vue {
   //Handle zoom
   zoomOnMousePosition(event: MouseWheelEvent): void{
     let sign = event.deltaY > 0 ? -1 : 1;
-    this.zoom += sign * this.zoomFactor;
+    let zoomTemp = this.zoom + sign * this.zoomFactor;
 
-    if(this.zoom > this.zoomMax){
-      this.zoom = this.zoomMax;
+    if(zoomTemp > this.zoomMax){
+      zoomTemp = this.zoomMax;
     }
-    else if(this.zoom < this.zoomMin){
-      this.zoom = this.zoomMin;
+    else if(zoomTemp < this.zoomMin){
+      zoomTemp = this.zoomMin;
     }
+
+    this.$store.commit("setZoom", zoomTemp);
 
     ///trying to center the zoom effect on mouse position
     ///not very successful so far
@@ -187,20 +190,24 @@ export default class App extends Vue {
     // this.$refs.view.style.top = (dy - event.clientY) + "px";
   }
   resetZoom(event: MouseEvent):void{
-    this.zoom = 1;
+    this.$store.commit("resetZoom", 1);
   }
 
   startSelection(event: MouseEvent):void{
-    this.selectionActive = true;
-    this.displaySelectionBox = true;
+    return;
 
-    let pos = new ScreenPosition(event.clientX, event.clientY);
+    // this.deactivateSelection();
 
-    this.$store.commit("setSelectionStartPosition", {
-      pos: pos,
-      active: this.selectionActive
-    });
-    this.endSelectionTemporaryPos = pos;
+    // this.selectionActive = true;
+    // this.displaySelectionBox = true;
+
+    // let pos = new ScreenPosition(event.clientX, event.clientY);
+
+    // this.$store.commit("setSelectionStartPosition", {
+    //   pos: pos,
+    //   active: this.selectionActive
+    // });
+    // this.endSelectionTemporaryPos = pos;
   }
   updateSelectionBox(event: MouseEvent):void{
     if(this.displaySelectionBox){
@@ -216,7 +223,7 @@ export default class App extends Vue {
   deactivateSelection():void{
     this.$store.commit("deactivateSelection",{
       active: this.selectionActive,
-      pos: new ScreenPosition(0,0)
+      pos: null
     });
   }
 
@@ -231,6 +238,9 @@ export default class App extends Vue {
   }
 
   //COMPUTED GETTERS
+  get zoom(): number{
+    return this.$store.state.zoom;
+  }
   get nodes(): Array<Node>{
     let nodes = this.$store.state.nodes;
     return nodes;
@@ -238,7 +248,7 @@ export default class App extends Vue {
 
   @Watch('zoom')
   onZoomChanged(){
-    this.$refs.view.style.zoom = this.zoom.toString();
+    this.$refs.viewport.style.zoom = this.zoom.toString();
   }
 }
 </script>

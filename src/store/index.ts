@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import  Node from "../types/Node";
+import Node from "../types/Node";
 import ScreenPosition from '@/types/ScreenPosition';
 import Line from '@/types/Line';
 import Data from '@/types/Data';
@@ -13,7 +13,9 @@ export default new Vuex.Store({
 
     selectionActive: Boolean,
     selectionStartPos: ScreenPosition,
-    selectionEndPos: ScreenPosition
+    selectionEndPos: ScreenPosition,
+
+    zoom: Number
   },
 
   mutations: {
@@ -65,6 +67,13 @@ export default new Vuex.Store({
       state.nodes.push(nodeCopy);
     },
 
+    updateNodeTitle(state, payload){
+      let node = state.nodes[payload.index];
+      node.title = payload.value;
+
+      state.nodes[payload.index] = node;
+    },
+
     addLineToNode(state, payload){
       state.nodes[payload].addLine();
     },
@@ -89,6 +98,13 @@ export default new Vuex.Store({
       state.selectionActive = payload.active;
       state.selectionStartPos = payload.pos;
       state.selectionEndPos = payload.pos;
+    },
+
+    setZoom(state, payload){
+      state.zoom = payload;
+    },
+    resetZoom(state, payload){
+      state.zoom = payload;
     }
   },
 
