@@ -1,4 +1,5 @@
 import Line  from "./Line";
+import Data  from "./Data";
 import ScreenPosition from "./ScreenPosition";
 
 export default class Node {

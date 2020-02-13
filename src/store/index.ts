@@ -46,7 +46,7 @@ export default new Vuex.Store({
       let newScreenPostion = new ScreenPosition(existingNode.position.x + (50 * payload.count), existingNode.position.y + (50 * payload.count));
 
       let nodeCopy = new Node(existingNode.title + " - copy", newScreenPostion);
-
+      
       let copiedLines = new Array<Line>();
       for (let i = 0; i < existingNode.lines.length; i++) {
         let line = existingNode.lines[i];
@@ -79,6 +79,14 @@ export default new Vuex.Store({
     },
     addColumnToNode(state, payload){
       state.nodes[payload].addColumn();
+    },
+
+    editDataCell(state, payload){
+      let node = state.nodes[payload.index];
+      let line = node.lines[payload.line];
+      let data = line.data[payload.column];
+
+      data.value = payload.value;
     },
 
     moveNodeToPosition(state, payload){

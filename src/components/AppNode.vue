@@ -10,11 +10,8 @@
 
 			<!--Node data - every line represents a typed information or data of any kind-->
 			<div class="node-content">
-				<div class="node-data-line" v-for="(line, index) in node.lines" :key="'line_' + index">
-					<div class="node-data" v-for="(data, index) in line.data" :key="'data_' + index">
-						{{ data.value }}
-					</div>
-				</div>
+				<LineData v-for="(line, index) in node.lines" :key="id + '_line_' + index"
+						  :index="index" :line="line" :node-in-edition="inEdition"></LineData>
 
 				<div v-if="inEdition">
 					<BaseIcon id="add_row_icon" class="node-data-edition-icon" @click="addLine()"
@@ -47,6 +44,7 @@
 import store from "@/store"
 
 import BaseIcon from "./BaseIcon.vue";
+import LineData from "./LineData.vue";
 
 import { Component, Prop, Watch, Vue, Emit } from "vue-property-decorator";
 import ScreenPosition from "@/types/ScreenPosition";
@@ -55,7 +53,8 @@ import Node from "@/types/Node"
 
 @Component({
   components: {
-	  BaseIcon
+	  BaseIcon,
+	  LineData
   }
 })
 export default class AppNode extends Vue {
@@ -278,32 +277,7 @@ export default class AppNode extends Vue {
 		flex:1 1 auto;
 		display: flex;
 		flex-direction: column;
-	}
-	.node-data-line{
-		width: 100%;
-		flex:0 0 35px;
-		line-height: 35px;
-		border-bottom: 1px solid #ccc;
-		display: flex;
-		flex-direction: row;
-	}
-
-	.node-data-line:last-child{
-		border-bottom: none;
-	}
-	.node-data-line:hover{
-		background-color: #f2f2f2;
-	}
-
-	.node-data{
-		flex: 1 1 auto;
-		width:fit-content;
-		border-right:1px solid #e6e6e6;
-		padding:0 5px;
-	}
-	.node-data:last-child{
-		border-right: none;
-	}
+	}	
 
 	.node-actions{
 		flex:0 0 0px;
